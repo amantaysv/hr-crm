@@ -9,6 +9,13 @@ export const START_DATE_OPTIONS: { value: StartDateOption; label: string }[] = [
   { value: 'other', label: 'Другое' },
 ]
 
+export type CitizenshipOption = 'kyrgyzstan' | 'other'
+
+export const CITIZENSHIP_OPTIONS: { value: CitizenshipOption; label: string }[] = [
+  { value: 'kyrgyzstan', label: 'Кыргызстан' },
+  { value: 'other', label: 'Другое' },
+]
+
 export type Education = 'higher' | 'vocational' | 'course_certificate' | 'none'
 
 export const EDUCATION_OPTIONS: { value: Education; label: string }[] = [

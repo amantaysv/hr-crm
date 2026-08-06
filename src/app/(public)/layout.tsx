@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function PublicLayout({
   children,
@@ -17,6 +18,7 @@ export default function PublicLayout({
         </div>
       </header>
       <main className="flex flex-1 flex-col">{children}</main>
+      <SiteFooter />
     </div>
   )
 }

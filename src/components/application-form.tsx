@@ -14,8 +14,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  CITIZENSHIP_OPTIONS,
   EDUCATION_OPTIONS,
   START_DATE_OPTIONS,
+  type CitizenshipOption,
   type Education,
   type StartDateOption,
 } from '@/lib/types'
@@ -26,8 +28,10 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
   >('idle')
   const [error, setError] = useState<string | null>(null)
   const [startDateOption, setStartDateOption] =
-    useState<StartDateOption>('asap')
-  const [education, setEducation] = useState<Education>('higher')
+    useState<StartDateOption | null>(null)
+  const [education, setEducation] = useState<Education | null>(null)
+  const [citizenshipOption, setCitizenshipOption] =
+    useState<CitizenshipOption | null>(null)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -40,6 +44,24 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
 
     if (!resumeFile || resumeFile.size === 0) {
       setError('Прикрепите файл резюме')
+      setStatus('error')
+      return
+    }
+
+    if (!startDateOption) {
+      setError('Выберите дату выхода')
+      setStatus('error')
+      return
+    }
+
+    if (!citizenshipOption) {
+      setError('Выберите гражданство')
+      setStatus('error')
+      return
+    }
+
+    if (!education) {
+      setError('Выберите образование')
       setStatus('error')
       return
     }
@@ -72,7 +94,10 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
           startDateOption === 'other'
             ? formData.get('start_date_other') || null
             : null,
-        citizenship: formData.get('citizenship'),
+        citizenship:
+          citizenshipOption === 'other'
+            ? formData.get('citizenship_other')
+            : 'Кыргызстан',
         education,
         portfolio_url: formData.get('portfolio_url') || null,
         resume_path: resumePath,
@@ -88,8 +113,9 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
 
     setStatus('done')
     form.reset()
-    setStartDateOption('asap')
-    setEducation('higher')
+    setStartDateOption(null)
+    setEducation(null)
+    setCitizenshipOption(null)
 
     // Fire-and-forget: notification emails should never block the "thank you" UI.
     fetch('/api/notify-application', {
@@ -144,7 +170,7 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
           }
         >
           <SelectTrigger id="start_date_option" className="w-full">
-            <SelectValue>
+            <SelectValue placeholder="Выберите">
               {(value: StartDateOption) =>
                 START_DATE_OPTIONS.find((option) => option.value === value)
                   ?.label
@@ -170,8 +196,41 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="citizenship">Гражданство</Label>
-        <Input id="citizenship" name="citizenship" type="text" required />
+        <Select
+          value={citizenshipOption}
+          onValueChange={(value) =>
+            setCitizenshipOption(value as CitizenshipOption)
+          }
+        >
+          <SelectTrigger id="citizenship" className="w-full">
+            <SelectValue placeholder="Выберите">
+              {(value: CitizenshipOption) =>
+                CITIZENSHIP_OPTIONS.find((option) => option.value === value)
+                  ?.label
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {CITIZENSHIP_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
+      {citizenshipOption === 'other' && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="citizenship_other">Уточните гражданство</Label>
+          <Input
+            id="citizenship_other"
+            name="citizenship_other"
+            type="text"
+            required
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="education">Образование</Label>
@@ -180,7 +239,7 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
           onValueChange={(value) => setEducation(value as Education)}
         >
           <SelectTrigger id="education" className="w-full">
-            <SelectValue>
+            <SelectValue placeholder="Выберите">
               {(value: Education) =>
                 EDUCATION_OPTIONS.find((option) => option.value === value)
                   ?.label

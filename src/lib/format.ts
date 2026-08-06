@@ -1,4 +1,9 @@
-function pluralize(count: number, one: string, few: string, many: string) {
+export function pluralize(
+  count: number,
+  one: string,
+  few: string,
+  many: string,
+) {
   const mod10 = count % 10
   const mod100 = count % 100
   if (mod10 === 1 && mod100 !== 11) return one
@@ -17,4 +22,10 @@ export function formatRelativeDate(iso: string) {
   }
 
   return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+}
+
+export function isRecent(iso: string, days = 3) {
+  const diffDays =
+    (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24)
+  return diffDays < days
 }

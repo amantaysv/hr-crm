@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef } from 'react'
 import {
   Select,
   SelectContent,
@@ -20,15 +19,18 @@ export function CandidateStatusForm({
   defaultValue: string
   options: { value: string; label: string }[]
 }) {
-  const formRef = useRef<HTMLFormElement>(null)
-
   return (
-    <form ref={formRef} action={action}>
-      <input type="hidden" name="vacancy_id" value={vacancyId} />
+    <form>
       <Select
         name="status"
         defaultValue={defaultValue}
-        onValueChange={() => formRef.current?.requestSubmit()}
+        onValueChange={(value: string | null) => {
+          if (!value) return
+          const formData = new FormData()
+          formData.set('status', value)
+          formData.set('vacancy_id', vacancyId)
+          action(formData)
+        }}
       >
         <SelectTrigger size="sm">
           <SelectValue>
