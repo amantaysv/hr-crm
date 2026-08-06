@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import type { Vacancy } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Markdown } from '@/components/markdown'
 import {
   Select,
   SelectContent,
@@ -20,6 +22,9 @@ export function VacancyForm({
   vacancy?: Vacancy
   action: (formData: FormData) => void
 }) {
+  const [description, setDescription] = useState(vacancy?.description ?? '')
+  const [preview, setPreview] = useState(false)
+
   return (
     <form action={action} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
@@ -34,13 +39,56 @@ export function VacancyForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="description">Описание</Label>
-        <Textarea
-          id="description"
-          name="description"
-          rows={5}
-          defaultValue={vacancy?.description}
-        />
+        <div className="flex items-center justify-between">
+          <Label htmlFor="description">Описание</Label>
+          <div className="flex gap-1 text-xs">
+            <button
+              type="button"
+              onClick={() => setPreview(false)}
+              className={
+                !preview
+                  ? 'font-medium text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }
+            >
+              Написать
+            </button>
+            <span className="text-muted-foreground">·</span>
+            <button
+              type="button"
+              onClick={() => setPreview(true)}
+              className={
+                preview
+                  ? 'font-medium text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }
+            >
+              Предпросмотр
+            </button>
+          </div>
+        </div>
+
+        <input type="hidden" name="description" value={description} />
+
+        {preview ? (
+          <div className="min-h-32 rounded-md border px-3 py-2">
+            {description ? (
+              <Markdown>{description}</Markdown>
+            ) : (
+              <p className="text-sm text-muted-foreground">Нечего показать</p>
+            )}
+          </div>
+        ) : (
+          <Textarea
+            id="description"
+            rows={5}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        )}
+        <p className="text-xs text-muted-foreground">
+          Поддерживается Markdown: **жирный**, *курсив*, списки, ссылки.
+        </p>
       </div>
 
       <div className="flex flex-col gap-1.5">

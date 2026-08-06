@@ -27,9 +27,7 @@ export function VacancyList({ vacancies }: { vacancies: Vacancy[] }) {
   }, [query, vacancies])
 
   if (vacancies.length === 0) {
-    return (
-      <p className="text-muted-foreground">Сейчас нет открытых вакансий.</p>
-    )
+    return null
   }
 
   return (

@@ -8,6 +8,7 @@ import { isRecent } from '@/lib/format'
 import { ApplicationForm } from '@/components/application-form'
 import { BackLink } from '@/components/back-link'
 import { Badge } from '@/components/ui/badge'
+import { Markdown } from '@/components/markdown'
 
 const getVacancy = cache(async (id: string) => {
   const supabase = await createClient()
@@ -69,9 +70,7 @@ export default async function VacancyPage({
         {vacancy.description && (
           <section className="flex flex-col gap-2">
             <h2 className="text-lg font-medium">Описание</h2>
-            <p className="whitespace-pre-wrap text-foreground/80">
-              {vacancy.description}
-            </p>
+            <Markdown>{vacancy.description}</Markdown>
           </section>
         )}
 
