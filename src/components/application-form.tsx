@@ -2,12 +2,32 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  EDUCATION_OPTIONS,
+  START_DATE_OPTIONS,
+  type Education,
+  type StartDateOption,
+} from '@/lib/types'
 
 export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
   const [status, setStatus] = useState<
     'idle' | 'submitting' | 'done' | 'error'
   >('idle')
   const [error, setError] = useState<string | null>(null)
+  const [startDateOption, setStartDateOption] =
+    useState<StartDateOption>('asap')
+  const [education, setEducation] = useState<Education>('higher')
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -37,15 +57,28 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
       return
     }
 
-    const { error: insertError } = await supabase.from('candidates').insert({
-      vacancy_id: vacancyId,
-      name: formData.get('name'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      cover_letter: formData.get('cover_letter') || null,
-      portfolio_url: formData.get('portfolio_url') || null,
-      resume_path: resumePath,
-    })
+    const expectedSalaryRaw = formData.get('expected_salary')
+
+    const { data: candidate, error: insertError } = await supabase
+      .from('candidates')
+      .insert({
+        vacancy_id: vacancyId,
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        expected_salary: expectedSalaryRaw ? Number(expectedSalaryRaw) : null,
+        start_date_option: startDateOption,
+        start_date_other:
+          startDateOption === 'other'
+            ? formData.get('start_date_other') || null
+            : null,
+        citizenship: formData.get('citizenship'),
+        education,
+        portfolio_url: formData.get('portfolio_url') || null,
+        resume_path: resumePath,
+      })
+      .select('id')
+      .single()
 
     if (insertError) {
       setError('Не удалось отправить отклик')
@@ -55,105 +88,145 @@ export function ApplicationForm({ vacancyId }: { vacancyId: string }) {
 
     setStatus('done')
     form.reset()
+    setStartDateOption('asap')
+    setEducation('higher')
+
+    // Fire-and-forget: notification emails should never block the "thank you" UI.
+    fetch('/api/notify-application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ candidateId: candidate.id }),
+    }).catch(() => {})
   }
 
   if (status === 'done') {
     return (
-      <p className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
-        Спасибо! Ваш отклик отправлен.
-      </p>
+      <Alert>
+        <AlertDescription>Спасибо! Ваш отклик отправлен.</AlertDescription>
+      </Alert>
     )
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
-          Имя
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          required
-          className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="name">Имя Фамилия</Label>
+        <Input id="name" name="name" type="text" required />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" type="email" required />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="phone">Телефон (WhatsApp)</Label>
+        <Input id="phone" name="phone" type="tel" required />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="expected_salary">Ожидаемая ЗП (на руки)</Label>
+        <Input
+          id="expected_salary"
+          name="expected_salary"
+          type="number"
+          min={0}
+          inputMode="numeric"
         />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-sm font-medium">
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="start_date_option">Дата выхода</Label>
+        <Select
+          value={startDateOption}
+          onValueChange={(value) =>
+            setStartDateOption(value as StartDateOption)
+          }
+        >
+          <SelectTrigger id="start_date_option" className="w-full">
+            <SelectValue>
+              {(value: StartDateOption) =>
+                START_DATE_OPTIONS.find((option) => option.value === value)
+                  ?.label
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {START_DATE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="phone" className="text-sm font-medium">
-          Телефон
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          required
-          className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        />
+      {startDateOption === 'other' && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="start_date_other">Уточните дату выхода</Label>
+          <Input id="start_date_other" name="start_date_other" type="text" />
+        </div>
+      )}
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="citizenship">Гражданство</Label>
+        <Input id="citizenship" name="citizenship" type="text" required />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="cover_letter" className="text-sm font-medium">
-          Сопроводительное письмо
-        </label>
-        <textarea
-          id="cover_letter"
-          name="cover_letter"
-          rows={4}
-          className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="education">Образование</Label>
+        <Select
+          value={education}
+          onValueChange={(value) => setEducation(value as Education)}
+        >
+          <SelectTrigger id="education" className="w-full">
+            <SelectValue>
+              {(value: Education) =>
+                EDUCATION_OPTIONS.find((option) => option.value === value)
+                  ?.label
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {EDUCATION_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="portfolio_url" className="text-sm font-medium">
-          Ссылка на портфолио / LinkedIn
-        </label>
-        <input
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="portfolio_url">Ссылка на портфолио / LinkedIn</Label>
+        <Input
           id="portfolio_url"
           name="portfolio_url"
           type="url"
           placeholder="https://"
-          className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
         />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="resume" className="text-sm font-medium">
-          Резюме (PDF или DOCX)
-        </label>
-        <input
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="resume">Резюме (PDF или DOCX)</Label>
+        <Input
           id="resume"
           name="resume"
           type="file"
           accept=".pdf,.doc,.docx"
           required
-          className="text-sm"
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-      <button
-        type="submit"
-        disabled={status === 'submitting'}
-        className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-      >
+      <Button type="submit" disabled={status === 'submitting'} className="mt-2">
         {status === 'submitting' ? 'Отправка...' : 'Отправить отклик'}
-      </button>
+      </Button>
     </form>
   )
 }

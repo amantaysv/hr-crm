@@ -1,4 +1,11 @@
+import Link from 'next/link'
+import { Briefcase } from 'lucide-react'
 import { signIn } from '@/lib/actions'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 export default async function LoginPage({
   searchParams,
@@ -9,46 +16,41 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">Вход в админку</h1>
+      <Link
+        href="/"
+        className="flex items-center justify-center gap-2 text-sm font-semibold tracking-tight"
+      >
+        <Briefcase className="size-4" />
+        Кызмат - Вакансии
+      </Link>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Вход в админку</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={signIn} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" required />
+            </div>
 
-      <form action={signIn} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="email" className="text-sm font-medium">
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="password">Пароль</Label>
+              <Input id="password" name="password" type="password" required />
+            </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="password" className="text-sm font-medium">
-            Пароль
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </div>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>Неверный email или пароль</AlertDescription>
+              </Alert>
+            )}
 
-        {error && (
-          <p className="text-sm text-red-600">Неверный email или пароль</p>
-        )}
-
-        <button
-          type="submit"
-          className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-white transition-colors hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
-          Войти
-        </button>
-      </form>
+            <Button type="submit" className="mt-2">
+              Войти
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

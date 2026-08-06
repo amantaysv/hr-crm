@@ -29,9 +29,7 @@ function vacancyFieldsFromForm(formData: FormData) {
   return {
     title: String(formData.get('title') ?? ''),
     description: String(formData.get('description') ?? ''),
-    requirements: String(formData.get('requirements') ?? ''),
-    location: String(formData.get('location') ?? ''),
-    employment_type: String(formData.get('employment_type') ?? ''),
+    salary: String(formData.get('salary') ?? ''),
     status: (formData.get('status') as VacancyStatus) ?? 'open',
   }
 }

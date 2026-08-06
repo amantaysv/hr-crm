@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { updateVacancy } from '@/lib/actions'
 import { VacancyForm } from '@/components/vacancy-form'
+import { BackLink } from '@/components/back-link'
 import type { Vacancy } from '@/lib/types'
 
 export default async function EditVacancyPage({
@@ -25,6 +26,7 @@ export default async function EditVacancyPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink href="/admin/vacancies">К вакансиям</BackLink>
       <h1 className="text-2xl font-semibold tracking-tight">
         Редактировать вакансию
       </h1>

@@ -1,26 +1,50 @@
 'use client'
 
-export function StatusSelect({
-  name,
+import { useRef } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+export function CandidateStatusForm({
+  action,
+  vacancyId,
   defaultValue,
   options,
 }: {
-  name: string
+  action: (formData: FormData) => void
+  vacancyId: string
   defaultValue: string
   options: { value: string; label: string }[]
 }) {
+  const formRef = useRef<HTMLFormElement>(null)
+
   return (
-    <select
-      name={name}
-      defaultValue={defaultValue}
-      onChange={(event) => event.currentTarget.form?.requestSubmit()}
-      className="rounded-md border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <form ref={formRef} action={action}>
+      <input type="hidden" name="vacancy_id" value={vacancyId} />
+      <Select
+        name="status"
+        defaultValue={defaultValue}
+        onValueChange={() => formRef.current?.requestSubmit()}
+      >
+        <SelectTrigger size="sm">
+          <SelectValue>
+            {(value: string) =>
+              options.find((option) => option.value === value)?.label
+            }
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </form>
   )
 }

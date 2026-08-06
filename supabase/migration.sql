@@ -9,9 +9,7 @@ create table if not exists vacancies (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   description text not null default '',
-  requirements text not null default '',
-  location text not null default '',
-  employment_type text not null default '',
+  salary text not null default '',
   status text not null default 'open' check (status in ('open', 'closed')),
   created_at timestamptz not null default now()
 );
@@ -22,7 +20,13 @@ create table if not exists candidates (
   name text not null,
   email text not null,
   phone text not null default '',
-  cover_letter text,
+  expected_salary numeric,
+  start_date_option text not null default 'asap'
+    check (start_date_option in ('asap', '1_week', '2_weeks', 'other')),
+  start_date_other text,
+  citizenship text not null default '',
+  education text not null default 'none'
+    check (education in ('higher', 'vocational', 'course_certificate', 'none')),
   portfolio_url text,
   resume_path text not null,
   status text not null default 'new'
