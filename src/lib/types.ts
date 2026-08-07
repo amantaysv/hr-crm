@@ -105,4 +105,6 @@ export interface Candidate {
   resume_path: string
   status: CandidateStatus
   created_at: string
+  /** Set once the new-application notification was dispatched. See migration_006. */
+  notified_at: string | null
 }
