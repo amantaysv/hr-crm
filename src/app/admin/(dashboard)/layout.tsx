@@ -11,13 +11,24 @@ export default function AdminLayout({
 }) {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b px-6 py-4">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/85 px-6 py-3 backdrop-blur-sm">
         <Link
           href="/admin/vacancies"
-          className="flex items-center gap-2 font-semibold tracking-tight"
+          className="flex items-center gap-2.5 font-heading font-semibold tracking-tight"
         >
-          <Briefcase className="size-4" />
-          Кызмат - Вакансии · Админка
+          <span
+            aria-hidden
+            className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+          >
+            <Briefcase className="size-3.5" />
+          </span>
+          <span>
+            Кызмат
+            <span className="font-normal text-muted-foreground">
+              {' '}
+              · Админка
+            </span>
+          </span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />

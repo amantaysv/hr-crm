@@ -1,15 +1,17 @@
+import { Suspense } from 'react'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Inbox } from 'lucide-react'
+import { Inbox, Pencil } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { pluralize } from '@/lib/format'
 import { BackLink } from '@/components/back-link'
-import { CandidateList } from '@/components/candidate-list'
+import { Button } from '@/components/ui/button'
 import {
-  CANDIDATE_STATUSES,
-  CANDIDATE_STATUS_LABELS,
-  type Candidate,
-  type Vacancy,
-} from '@/lib/types'
+  CandidateTable,
+  CandidateTableSkeleton,
+} from '@/components/candidate-table'
+import type { Candidate, Vacancy } from '@/lib/types'
 
 function resumeDownloadName(candidate: Candidate, vacancyTitle: string) {
   const extension = candidate.resume_path.split('.').pop()
@@ -42,52 +44,110 @@ export default async function VacancyCandidatesPage({
     .order('created_at', { ascending: false })
     .returns<Candidate[]>()
 
-  const adminClient = createAdminClient()
-  const resumeUrls: Record<string, string> = {}
+  const list = candidates ?? []
 
-  for (const candidate of candidates ?? []) {
-    const { data } = await adminClient.storage
-      .from('resumes')
-      .createSignedUrl(candidate.resume_path, 60 * 60, {
-        download: resumeDownloadName(candidate, vacancy.title),
-      })
-    if (data?.signedUrl) {
-      resumeUrls[candidate.id] = data.signedUrl
-    }
+  const adminClient = createAdminClient()
+  const signed = await Promise.all(
+    list.map(async (candidate) => {
+      const { data } = await adminClient.storage
+        .from('resumes')
+        .createSignedUrl(candidate.resume_path, 60 * 60, {
+          download: resumeDownloadName(candidate, vacancy.title),
+        })
+      return [candidate.id, data?.signedUrl] as const
+    }),
+  )
+
+  const resumeUrls: Record<string, string> = {}
+  for (const [candidateId, url] of signed) {
+    if (url) resumeUrls[candidateId] = url
   }
 
-  const statusOptions = CANDIDATE_STATUSES.map((status) => ({
-    value: status,
-    label: CANDIDATE_STATUS_LABELS[status],
-  }))
+  const fresh = list.filter((candidate) => candidate.status === 'new').length
+  const hired = list.filter((candidate) => candidate.status === 'hired').length
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/admin/vacancies">К вакансиям</BackLink>
+      <BackLink href="/admin/vacancies">Все вакансии</BackLink>
 
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Кандидаты: {vacancy.title}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {candidates?.length
-            ? `${candidates.length} ${candidates.length === 1 ? 'отклик' : 'откликов'}`
-            : 'Пока нет откликов'}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-balance">
+            {vacancy.title}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+            <Stat value={list.length} label="откликов" />
+            {fresh > 0 && (
+              <Stat
+                value={fresh}
+                label={pluralize(fresh, 'новый', 'новых', 'новых')}
+                tone="new"
+              />
+            )}
+            {hired > 0 && (
+              <Stat
+                value={hired}
+                label={pluralize(hired, 'нанят', 'наняты', 'нанято')}
+                tone="hired"
+              />
+            )}
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          render={<Link href={`/admin/vacancies/${vacancy.id}`} />}
+        >
+          <Pencil className="size-3.5" />
+          Редактировать вакансию
+        </Button>
       </div>
 
-      {!candidates || candidates.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-16 text-center text-muted-foreground">
-          <Inbox className="size-8" />
-          <p>По этой вакансии пока нет откликов.</p>
+      {list.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-16 text-center">
+          <Inbox className="size-8 text-muted-foreground" />
+          <p className="font-medium">По этой вакансии пока нет откликов</p>
+          <p className="text-sm text-muted-foreground">
+            Отклики появятся здесь сразу после отправки формы
+          </p>
         </div>
       ) : (
-        <CandidateList
-          candidates={candidates}
-          resumeUrls={resumeUrls}
-          statusOptions={statusOptions}
-        />
+        // CandidateTable reads its filters from useSearchParams.
+        <Suspense fallback={<CandidateTableSkeleton />}>
+          <CandidateTable
+            candidates={list}
+            resumeUrls={resumeUrls}
+            vacancyId={vacancy.id}
+          />
+        </Suspense>
       )}
     </div>
+  )
+}
+
+function Stat({
+  value,
+  label,
+  tone,
+}: {
+  value: number
+  label: string
+  tone?: 'new' | 'hired'
+}) {
+  return (
+    <span className="flex items-baseline gap-1.5">
+      <span
+        className={
+          tone === 'new'
+            ? 'text-lg font-semibold text-status-new-foreground'
+            : tone === 'hired'
+              ? 'text-lg font-semibold text-status-hired-foreground'
+              : 'text-lg font-semibold'
+        }
+      >
+        {value}
+      </span>
+      <span className="text-muted-foreground">{label}</span>
+    </span>
   )
 }

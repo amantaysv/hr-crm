@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t)}}catch(e){}})()`,
+            __html: `(function(){try{var e=document.documentElement,t=localStorage.getItem('theme');e.setAttribute('data-theme',t==='light'||t==='dark'?t:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))}catch(n){}})()`,
           }}
         />
       </head>

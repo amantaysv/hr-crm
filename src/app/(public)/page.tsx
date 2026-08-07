@@ -15,19 +15,26 @@ export default async function Home() {
   const count = vacancies?.length ?? 0
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 pt-12 pb-16">
       <div className="flex flex-col gap-3">
-        <h1 className="text-4xl font-semibold tracking-tight text-balance">
-          Найдите работу мечты
+        <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+          Открытые вакансии
         </h1>
-        <p className="text-muted-foreground">
-          Выберите вакансию, чтобы узнать подробности и оставить отклик.
+        <p className="max-w-xl text-muted-foreground text-pretty">
+          Условия, описание и форма отклика — на одной странице. Заполнение
+          занимает 2–3 минуты, дальше HR свяжется с вами по WhatsApp.
         </p>
-        <p className="text-sm font-medium text-muted-foreground">
-          {count > 0
-            ? `${count} ${pluralize(count, 'открытая вакансия', 'открытые вакансии', 'открытых вакансий')}`
-            : 'Открытых вакансий пока нет'}
-        </p>
+        {count > 0 && (
+          <p className="text-sm font-medium text-primary">
+            {count}{' '}
+            {pluralize(
+              count,
+              'открытая вакансия',
+              'открытые вакансии',
+              'открытых вакансий',
+            )}
+          </p>
+        )}
       </div>
 
       <VacancyList vacancies={vacancies ?? []} />

@@ -11,7 +11,10 @@ export const START_DATE_OPTIONS: { value: StartDateOption; label: string }[] = [
 
 export type CitizenshipOption = 'kyrgyzstan' | 'other'
 
-export const CITIZENSHIP_OPTIONS: { value: CitizenshipOption; label: string }[] = [
+export const CITIZENSHIP_OPTIONS: {
+  value: CitizenshipOption
+  label: string
+}[] = [
   { value: 'kyrgyzstan', label: 'Кыргызстан' },
   { value: 'other', label: 'Другое' },
 ]
@@ -51,6 +54,31 @@ export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
   offer: 'Оффер',
   hired: 'Нанят',
   rejected: 'Отказ',
+}
+
+export type CandidateStatusVariant = `status-${CandidateStatus}`
+
+/** Badge variant per funnel stage. Colours live in globals.css as --status-* tokens. */
+export const CANDIDATE_STATUS_VARIANTS: Record<
+  CandidateStatus,
+  CandidateStatusVariant
+> = {
+  new: 'status-new',
+  screening: 'status-screening',
+  interview: 'status-interview',
+  offer: 'status-offer',
+  hired: 'status-hired',
+  rejected: 'status-rejected',
+}
+
+/** Tailwind needs these spelled out — `bg-status-${s}-dot` is not statically extractable. */
+export const CANDIDATE_STATUS_DOTS: Record<CandidateStatus, string> = {
+  new: 'bg-status-new-dot',
+  screening: 'bg-status-screening-dot',
+  interview: 'bg-status-interview-dot',
+  offer: 'bg-status-offer-dot',
+  hired: 'bg-status-hired-dot',
+  rejected: 'bg-status-rejected-dot',
 }
 
 export interface Vacancy {
